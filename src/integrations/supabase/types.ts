@@ -14,7 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bot_settings: {
+        Row: {
+          api_url: string
+          bankroll: number
+          created_at: string
+          id: string
+          password: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          api_url?: string
+          bankroll?: number
+          created_at?: string
+          id?: string
+          password?: string
+          updated_at?: string
+          user_id: string
+          username?: string
+        }
+        Update: {
+          api_url?: string
+          bankroll?: number
+          created_at?: string
+          id?: string
+          password?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
