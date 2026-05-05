@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
 
 type Endpoint = "status" | "profit" | "trades" | "balance" | "daily" | "performance";
 
 export function useFreqtrade<T = any>(endpoint: Endpoint, intervalMs = 5000) {
+  const { session } = useAuth();
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
@@ -11,6 +13,10 @@ export function useFreqtrade<T = any>(endpoint: Endpoint, intervalMs = 5000) {
   const mountedRef = useRef(true);
 
   const fetchOnce = useCallback(async () => {
+    if (!session) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data: res, error: err } = await supabase.functions.invoke(
         `freqtrade-proxy?endpoint=${endpoint}`,
@@ -37,17 +43,18 @@ export function useFreqtrade<T = any>(endpoint: Endpoint, intervalMs = 5000) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [endpoint]);
+  }, [endpoint, session]);
 
   useEffect(() => {
     mountedRef.current = true;
+    if (!session) return;
     fetchOnce();
     const id = setInterval(fetchOnce, intervalMs);
     return () => {
       mountedRef.current = false;
       clearInterval(id);
     };
-  }, [fetchOnce, intervalMs]);
+  }, [fetchOnce, intervalMs, session]);
 
   return { data, error, offline, loading, refetch: fetchOnce };
 }
