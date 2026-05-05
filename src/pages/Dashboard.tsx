@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Activity, TrendingUp, Wallet, Target, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const { settings } = useSettings();
