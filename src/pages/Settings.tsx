@@ -63,7 +63,7 @@ export default function Settings() {
           </div>
           <div>
             <Label htmlFor="bank">Bankroll (USDT)</Label>
-            <Input id="bank" type="number" step="0.01" value={form.bankroll} onChange={(e) => setForm({ ...form, bankroll: Number(e.target.value) })} />
+            <Input id="bank" type="number" step="0.01" value={form.bankroll === 0 ? "" : form.bankroll} onChange={(e) => setForm({ ...form, bankroll: e.target.value === "" ? 0 : Number(e.target.value) })} />
           </div>
           <Button type="submit" disabled={busy}>
             {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
