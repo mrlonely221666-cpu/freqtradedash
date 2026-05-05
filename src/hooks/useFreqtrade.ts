@@ -43,17 +43,18 @@ export function useFreqtrade<T = any>(endpoint: Endpoint, intervalMs = 5000) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [endpoint]);
+  }, [endpoint, session]);
 
   useEffect(() => {
     mountedRef.current = true;
+    if (!session) return;
     fetchOnce();
     const id = setInterval(fetchOnce, intervalMs);
     return () => {
       mountedRef.current = false;
       clearInterval(id);
     };
-  }, [fetchOnce, intervalMs]);
+  }, [fetchOnce, intervalMs, session]);
 
   return { data, error, offline, loading, refetch: fetchOnce };
 }
