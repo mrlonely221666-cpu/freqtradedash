@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Activity, TrendingUp, Wallet, Target, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const { settings } = useSettings();
@@ -68,12 +69,12 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Real-time bot performance</p>
+      <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Real-time bot performance</p>
         </div>
-        <Badge variant={botRunning ? "default" : "destructive"} className={botRunning ? "bg-gain text-background" : ""}>
+        <Badge variant={botRunning ? "default" : "destructive"} className={cn("shrink-0", botRunning && "bg-gain text-background")}>
           <span className="h-2 w-2 rounded-full bg-current mr-2 animate-pulse" />
           {botRunning ? "Running" : "Offline"}
         </Badge>

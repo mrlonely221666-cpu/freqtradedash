@@ -34,9 +34,9 @@ export default function Analytics() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-sm text-muted-foreground">Performance over time</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Analytics</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">Performance over time</p>
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mb-4">

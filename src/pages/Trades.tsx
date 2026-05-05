@@ -33,12 +33,12 @@ export default function Trades() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Trades</h1>
-        <p className="text-sm text-muted-foreground">{filtered.length} of {trades.length} trades</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Trades</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">{filtered.length} of {trades.length} trades</p>
       </div>
 
-      <Card className="p-4 mb-4 grid gap-3 grid-cols-2 md:grid-cols-4">
+      <Card className="p-3 sm:p-4 mb-4 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Input placeholder="Filter pair…" value={pair} onChange={(e) => setPair(e.target.value)} />
         <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>

@@ -51,7 +51,7 @@ export default function Settings() {
             <Input id="url" placeholder="http://192.168.1.10:8080" value={form.api_url} onChange={(e) => setForm({ ...form, api_url: e.target.value })} required />
             <p className="text-xs text-muted-foreground mt-1">Base URL of your bot (no trailing /api/v1).</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="user">Username</Label>
               <Input id="user" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
