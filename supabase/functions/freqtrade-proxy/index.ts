@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!settings?.api_url) return json({ error: "Bot not configured" }, 400);
+    if (!settings?.api_url) return json({ error: "Bot not configured", not_configured: true, offline: true }, 200);
 
     const url = new URL(req.url);
     const endpoint = url.searchParams.get("endpoint") || "status";
