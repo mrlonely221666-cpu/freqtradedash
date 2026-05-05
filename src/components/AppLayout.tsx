@@ -18,7 +18,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
             <div className="ml-auto text-xs text-muted-foreground">Live · refresh 5s</div>
           </header>
-          <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto overflow-x-hidden">{children}</main>
         </div>
       </div>
     </SidebarProvider>
