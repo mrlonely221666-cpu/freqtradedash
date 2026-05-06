@@ -47,6 +47,66 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_history: {
+        Row: {
+          amount: number | null
+          close_date: string | null
+          close_rate: number | null
+          created_at: string
+          exit_reason: string | null
+          id: string
+          is_short: boolean
+          open_date: string | null
+          open_rate: number | null
+          pair: string
+          profit_abs: number | null
+          profit_ratio: number | null
+          raw: Json | null
+          stake_amount: number | null
+          trade_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          close_date?: string | null
+          close_rate?: number | null
+          created_at?: string
+          exit_reason?: string | null
+          id?: string
+          is_short?: boolean
+          open_date?: string | null
+          open_rate?: number | null
+          pair: string
+          profit_abs?: number | null
+          profit_ratio?: number | null
+          raw?: Json | null
+          stake_amount?: number | null
+          trade_id: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          close_date?: string | null
+          close_rate?: number | null
+          created_at?: string
+          exit_reason?: string | null
+          id?: string
+          is_short?: boolean
+          open_date?: string | null
+          open_rate?: number | null
+          pair?: string
+          profit_abs?: number | null
+          profit_ratio?: number | null
+          raw?: Json | null
+          stake_amount?: number | null
+          trade_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
