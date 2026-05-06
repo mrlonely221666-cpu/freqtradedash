@@ -2,9 +2,10 @@ import { AppLayout } from "@/components/AppLayout";
 import { useFreqtrade } from "@/hooks/useFreqtrade";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
-import { fmtPct, fmtUsd, tone } from "@/lib/format";
+import { fmtUsd, tone } from "@/lib/format";
 import { useMemo } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 
 export default function Analytics() {
   const trades = useFreqtrade<any>("trades");
@@ -16,69 +17,80 @@ export default function Analytics() {
     let cum = 0;
     return [...closed]
       .sort((a, b) => new Date(a.close_date).getTime() - new Date(b.close_date).getTime())
-      .map((t) => {
-        cum += t.profit_abs ?? 0;
-        return { date: new Date(t.close_date).toLocaleDateString(), equity: Number(cum.toFixed(2)) };
-      });
+      .map((t) => { cum += t.profit_abs ?? 0; return { t: new Date(t.close_date).getTime(), equity: Number(cum.toFixed(2)) }; });
   }, [closed]);
 
-  const dailyData = useMemo(() => {
-    return [...(daily.data?.data ?? [])]
-      .reverse()
-      .map((d: any) => ({ date: d.date, profit: Number((d.abs_profit ?? 0).toFixed(2)) }));
-  }, [daily.data]);
+  const dailyData = useMemo(() => [...(daily.data?.data ?? [])].reverse().map((d: any) => ({
+    date: d.date, profit: Number((d.abs_profit ?? 0).toFixed(2)),
+  })), [daily.data]);
 
   const best = closed.reduce((b: any, t: any) => (t.profit_abs > (b?.profit_abs ?? -Infinity) ? t : b), null);
   const worst = closed.reduce((b: any, t: any) => (t.profit_abs < (b?.profit_abs ?? Infinity) ? t : b), null);
   const avg = closed.length ? closed.reduce((s: number, t: any) => s + (t.profit_abs ?? 0), 0) / closed.length : 0;
+  const totalEq = equity.length ? equity[equity.length - 1].equity : 0;
+  const eqTone = totalEq >= 0 ? "gain" : "loss";
 
   return (
     <AppLayout>
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold">Analytics</h1>
-        <p className="text-xs sm:text-sm text-muted-foreground">Performance over time</p>
+      <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-base sm:text-lg font-bold tracking-tight uppercase">Analytics</h1>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground hidden sm:inline">Performance</span>
+        </div>
+        <span className="text-[10px] tabular px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{closed.length} closed</span>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mb-4">
-        <StatCard label="Best trade" value={fmtUsd(best?.profit_abs ?? 0)} sub={best?.pair ?? "—"} tone="gain" />
-        <StatCard label="Worst trade" value={fmtUsd(worst?.profit_abs ?? 0)} sub={worst?.pair ?? "—"} tone="loss" />
-        <StatCard label="Avg / trade" value={fmtUsd(avg)} tone={tone(avg)} />
+      <div className="grid gap-1.5 grid-cols-3 mb-2">
+        <StatCard label="Best" value={fmtUsd(best?.profit_abs ?? 0)} sub={best?.pair ?? "—"} tone="gain" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard label="Worst" value={fmtUsd(worst?.profit_abs ?? 0)} sub={worst?.pair ?? "—"} tone="loss" icon={<TrendingDown className="h-3.5 w-3.5" />} />
+        <StatCard label="Avg / trade" value={fmtUsd(avg)} tone={tone(avg)} icon={<BarChart3 className="h-3.5 w-3.5" />} />
       </div>
 
-      <Card className="p-4 mb-4">
-        <h3 className="font-semibold mb-4">Equity curve</h3>
-        <div className="h-64">
+      <Card className="bg-card border-border rounded-md overflow-hidden mb-2">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/40">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">Equity Curve</span>
+          <span className={`text-sm font-bold tabular ${eqTone === "gain" ? "text-gain" : "text-loss"}`}>{fmtUsd(totalEq)}</span>
+        </div>
+        <div className="h-56 sm:h-72 p-2">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={equity}>
+            <AreaChart data={equity} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                <linearGradient id="eqA" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={`hsl(var(--${eqTone}))`} stopOpacity={0.4} />
+                  <stop offset="100%" stopColor={`hsl(var(--${eqTone}))`} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-              <Area type="monotone" dataKey="equity" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#eq)" />
+              <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="t" type="number" domain={["dataMin", "dataMax"]} scale="time" stroke="hsl(var(--muted-foreground))" fontSize={10}
+                tickFormatter={(v) => new Date(v).toLocaleDateString(undefined, { month: "short", day: "numeric" })} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} orientation="right" width={50} />
+              <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 11 }}
+                labelFormatter={(v) => new Date(v).toLocaleString()} formatter={(v: any) => [fmtUsd(Number(v)), "Equity"]} />
+              <Area type="monotone" dataKey="equity" stroke={`hsl(var(--${eqTone}))`} strokeWidth={1.5} fill="url(#eqA)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
-      <Card className="p-4">
-        <h3 className="font-semibold mb-4">Daily performance</h3>
-        <div className="h-64">
+      <Card className="bg-card border-border rounded-md overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/40">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">Daily Performance</span>
+          <span className="text-[10px] tabular text-muted-foreground">{dailyData.length} days</span>
+        </div>
+        <div className="h-56 sm:h-72 p-2">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-              <Tooltip
-                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                formatter={(v: any) => fmtUsd(Number(v))}
-              />
-              <Bar dataKey="profit" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <BarChart data={dailyData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false}
+                tickFormatter={(v) => new Date(v).toLocaleDateString(undefined, { month: "short", day: "numeric" })} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} orientation="right" width={50} />
+              <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 11 }}
+                cursor={{ fill: "hsl(var(--secondary) / 0.4)" }} formatter={(v: any) => [fmtUsd(Number(v)), "Profit"]} />
+              <Bar dataKey="profit" radius={[2, 2, 0, 0]}
+                shape={(props: any) => {
+                  const fill = props.payload.profit >= 0 ? "hsl(var(--gain))" : "hsl(var(--loss))";
+                  return <rect {...props} fill={fill} />;
+                }} />
             </BarChart>
           </ResponsiveContainer>
         </div>
