@@ -1,11 +1,11 @@
 export const fmtNum = (n: number | null | undefined, digits = 2) =>
-  n == null || isNaN(n) ? "—" : n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  n == null || isNaN(n) ? "—" : n.toLocaleString("fr-FR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
 export const fmtUsd = (n: number | null | undefined, digits = 2) =>
-  n == null || isNaN(n) ? "—" : (n >= 0 ? "" : "-") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  n == null || isNaN(n) ? "—" : (n >= 0 ? "" : "-") + "$" + Math.abs(n).toLocaleString("fr-FR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
 export const fmtPct = (n: number | null | undefined, digits = 2) =>
-  n == null || isNaN(n) ? "—" : (n >= 0 ? "+" : "") + n.toFixed(digits) + "%";
+  n == null || isNaN(n) ? "—" : (n >= 0 ? "+" : "") + n.toFixed(digits).replace(".", ",") + "%";
 
 export const tone = (n: number | null | undefined): "gain" | "loss" | "default" =>
   n == null ? "default" : n > 0 ? "gain" : n < 0 ? "loss" : "default";

@@ -20,7 +20,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">FreqDash Terminal</div>
             <div className="ml-auto flex items-center gap-2 text-[10px] tabular text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-gain animate-pulse" />
-              <span className="uppercase tracking-wider">Live · 5s</span>
+              <span className="uppercase tracking-wider">Direct · 5s</span>
             </div>
           </header>
           <main className="flex-1 p-2.5 sm:p-3 md:p-4 overflow-auto overflow-x-hidden">{children}</main>
