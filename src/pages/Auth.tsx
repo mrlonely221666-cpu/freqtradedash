@@ -28,7 +28,7 @@ export default function Auth() {
         options: { emailRedirectTo: `${window.location.origin}/` },
       });
       if (error) toast.error(error.message);
-      else toast.success("Account created. You're in.");
+      else toast.success("Compte créé. Vous êtes connecté.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
@@ -45,30 +45,30 @@ export default function Auth() {
           </div>
           <div>
             <div className="font-bold text-lg">FreqDash</div>
-            <div className="text-xs text-muted-foreground">Freqtrade monitoring</div>
+            <div className="text-xs text-muted-foreground">Suivi Freqtrade</div>
           </div>
         </div>
-        <h1 className="text-2xl font-bold mb-1">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-        <p className="text-sm text-muted-foreground mb-6">Private dashboard for your trading bot</p>
+        <h1 className="text-2xl font-bold mb-1">{mode === "signin" ? "Connexion" : "Créer un compte"}</h1>
+        <p className="text-sm text-muted-foreground mb-6">Tableau de bord privé pour votre bot de trading</p>
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Mot de passe</Label>
             <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <Button type="submit" className="w-full" disabled={busy}>
             {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {mode === "signin" ? "Sign in" : "Sign up"}
+            {mode === "signin" ? "Se connecter" : "S'inscrire"}
           </Button>
         </form>
         <button
           className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
         >
-          {mode === "signin" ? "No account? Sign up" : "Have an account? Sign in"}
+          {mode === "signin" ? "Pas de compte ? S'inscrire" : "Déjà inscrit ? Se connecter"}
         </button>
       </Card>
     </div>

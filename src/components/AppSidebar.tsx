@@ -4,10 +4,10 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Tableau de bord", url: "/", icon: LayoutDashboard },
   { title: "Trades", url: "/trades", icon: ListOrdered },
-  { title: "Analytics", url: "/analytics", icon: LineChart },
-  { title: "Settings", url: "/settings", icon: SettingsIcon },
+  { title: "Analytique", url: "/analytics", icon: LineChart },
+  { title: "Paramètres", url: "/settings", icon: SettingsIcon },
 ];
 
 export function AppSidebar() {
@@ -40,7 +40,7 @@ export function AppSidebar() {
         <div className="mt-auto p-2">
           <SidebarMenuButton onClick={() => supabase.auth.signOut()}>
             <LogOut className="h-4 w-4" />
-            <span>Sign out</span>
+            <span>Déconnexion</span>
           </SidebarMenuButton>
         </div>
       </SidebarContent>
