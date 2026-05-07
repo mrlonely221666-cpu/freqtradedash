@@ -157,6 +157,59 @@ export default function Trades() {
           </table>
         </div>
       </div>
+
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-lg bg-card border-border">
+          {selected && (() => {
+            const t = selected;
+            const pct = Number(t.profit_ratio ?? 0) * 100;
+            const profit = Number(t.profit_abs ?? 0);
+            const isShort = !!(t.is_short || t.trade_direction === "short");
+            const open = Number(t.open_rate ?? 0);
+            const close = t.close_rate != null ? Number(t.close_rate) : null;
+            const isOpen = close == null;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 uppercase tracking-wide">
+                    <span className={cn("h-2 w-2 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
+                    {t.pair}
+                    <span className={cn("text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded", isShort ? "bg-loss/10 text-loss" : "bg-gain/10 text-gain")}>
+                      {isShort ? "Vente" : "Achat"}
+                    </span>
+                    {isOpen && <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">Ouvert</span>}
+                    {t.archived && <Archive className="h-3.5 w-3.5 text-muted-foreground" />}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-2 text-xs tabular mt-2">
+                  <Detail label="ID Trade" value={`#${t.trade_id}`} />
+                  <Detail label="Stratégie" value={t.strategy ?? t.enter_tag ?? "—"} />
+                  <Detail label="Date d'entrée" value={fmtDateTime(t.open_date)} />
+                  <Detail label="Date de sortie" value={isOpen ? "—" : fmtDateTime(t.close_date)} />
+                  <Detail label="Durée" value={fmtDuration(t.open_date, t.close_date)} />
+                  <Detail label="Raison sortie" value={t.exit_reason ?? "—"} />
+                  <Detail label="Cours d'entrée" value={fmtNum(open, 6)} />
+                  <Detail label="Cours de sortie" value={close != null ? fmtNum(close, 6) : "—"} />
+                  <Detail label="Quantité" value={fmtNum(Number(t.amount ?? 0), 6)} />
+                  <Detail label="Mise" value={fmtUsd(Number(t.stake_amount ?? 0))} />
+                  <Detail label="Effet de levier" value={t.leverage ? `x${t.leverage}` : "x1"} />
+                  <Detail label="Frais" value={t.fee_close_cost != null ? fmtUsd(Number(t.fee_open_cost ?? 0) + Number(t.fee_close_cost ?? 0)) : "—"} />
+                  <Detail label="Stop loss" value={t.stop_loss_abs ? fmtNum(Number(t.stop_loss_abs), 6) : "—"} />
+                  <Detail label="Take profit" value={t.initial_stop_loss_abs ? fmtNum(Number(t.initial_stop_loss_abs), 6) : "—"} />
+                </div>
+                <div className={cn("mt-3 rounded-md p-3 flex items-center justify-between", profit >= 0 ? "bg-gain/10" : "bg-loss/10")}>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Résultat</span>
+                  <div className={cn("flex items-center gap-2 tabular font-bold", profit >= 0 ? "text-gain" : "text-loss")}>
+                    {profit >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+                    <span>{fmtUsd(profit)}</span>
+                    <span className="text-xs opacity-80">({fmtPct(pct)})</span>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
