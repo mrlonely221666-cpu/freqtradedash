@@ -79,7 +79,7 @@ export default function Trades() {
           const isShort = !!(t.is_short || t.trade_direction === "short");
           const positive = pct > 0;
           return (
-            <div key={`${t.trade_id}-${i}`} className="group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 transition-colors">
+            <button type="button" onClick={() => setSelected(t)} key={`${t.trade_id}-${i}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 transition-colors">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
