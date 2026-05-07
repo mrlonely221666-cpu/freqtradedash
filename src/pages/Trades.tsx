@@ -31,6 +31,40 @@ export default function Trades() {
     });
   }, [trades, pair, filter, from, to]);
 
+  const selected = selectedIdx != null ? filtered[selectedIdx] ?? null : null;
+
+  const openTrade = (i: number, e?: React.MouseEvent | React.KeyboardEvent) => {
+    lastFocused.current = (e?.currentTarget as HTMLElement) ?? (document.activeElement as HTMLElement);
+    setSelectedIdx(i);
+  };
+
+  const closeDialog = () => {
+    setSelectedIdx(null);
+    // restore focus to the trigger after Radix unmount
+    requestAnimationFrame(() => lastFocused.current?.focus?.());
+  };
+
+  // Keep index valid when filters change
+  useEffect(() => {
+    if (selectedIdx != null && selectedIdx >= filtered.length) setSelectedIdx(null);
+  }, [filtered.length, selectedIdx]);
+
+  // Arrow-key navigation between trades while dialog is open
+  useEffect(() => {
+    if (selectedIdx == null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" && selectedIdx < filtered.length - 1) {
+        e.preventDefault();
+        setSelectedIdx(selectedIdx + 1);
+      } else if (e.key === "ArrowLeft" && selectedIdx > 0) {
+        e.preventDefault();
+        setSelectedIdx(selectedIdx - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedIdx, filtered.length]);
+
   const wins = filtered.filter((t: any) => Number(t.profit_ratio ?? 0) > 0).length;
   const losses = filtered.length - wins;
 
