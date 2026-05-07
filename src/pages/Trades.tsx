@@ -96,7 +96,7 @@ export default function Trades() {
               <div className={cn("text-right tabular font-semibold text-sm self-center flex items-center gap-0.5 justify-end", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")}>
                 {positive ? <ArrowUpRight className="h-3 w-3" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
                 {fmtPct(pct)}
-              </div>
+            </button>
             </div>
           );
         })}
