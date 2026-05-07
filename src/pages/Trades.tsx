@@ -247,6 +247,26 @@ export default function Trades() {
                     <span className="text-xs opacity-80">({fmtPct(pct)})</span>
                   </div>
                 </div>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled={selectedIdx == null || selectedIdx <= 0}
+                    onClick={() => selectedIdx != null && setSelectedIdx(selectedIdx - 1)}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Précédent
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled={selectedIdx == null || selectedIdx >= filtered.length - 1}
+                    onClick={() => selectedIdx != null && setSelectedIdx(selectedIdx + 1)}
+                  >
+                    Suivant <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </>
             );
           })()}
