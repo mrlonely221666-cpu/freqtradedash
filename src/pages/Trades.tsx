@@ -213,3 +213,12 @@ export default function Trades() {
     </AppLayout>
   );
 }
+
+function Detail({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded bg-secondary/40 px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-xs font-medium truncate">{value}</div>
+    </div>
+  );
+}
