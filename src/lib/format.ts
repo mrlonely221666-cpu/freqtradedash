@@ -19,3 +19,10 @@ export const fmtDuration = (open: string, close?: string | null) => {
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
 };
+
+export const fmtDateTime = (d?: string | null) => {
+  if (!d) return "—";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "—";
+  return dt.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "medium" });
+};
