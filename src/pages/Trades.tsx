@@ -194,8 +194,11 @@ export default function Trades() {
         </div>
       </div>
 
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-lg bg-card border-border">
+      <Dialog open={!!selected} onOpenChange={(o) => { if (!o) closeDialog(); }}>
+        <DialogContent
+          className="max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           {selected && (() => {
             const t = selected;
             const pct = Number(t.profit_ratio ?? 0) * 100;
