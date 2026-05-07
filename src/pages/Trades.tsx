@@ -1,12 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTradeHistory } from "@/hooks/useTradeHistory";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { fmtNum, fmtPct, fmtUsd, fmtDuration, fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowDownRight, ArrowUpRight, TrendingDown, TrendingUp, Archive } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive } from "lucide-react";
 
 export default function Trades() {
   const { trades, archivedCount } = useTradeHistory();
@@ -14,7 +15,8 @@ export default function Trades() {
   const [filter, setFilter] = useState<"all" | "win" | "loss">("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const lastFocused = useRef<HTMLElement | null>(null);
 
   const filtered = useMemo(() => {
     return trades.filter((t: any) => {
