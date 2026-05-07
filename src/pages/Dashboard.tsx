@@ -117,7 +117,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-3 mb-3">
-        <StatCard label="Bankroll" value={fmtUsd(bankroll)} icon={<Wallet className="h-3.5 w-3.5" />} />
+        <StatCard label="Bankroll" value={fmtUsd(bankroll)} sub={`Initial ${fmtUsd(initialBankroll)}`} tone={tone(totalProfitAll)} icon={<Wallet className="h-3.5 w-3.5" />} />
         <StatCard label="ROI" value={fmtPct(roi)} tone={tone(roi)} icon={<Zap className="h-3.5 w-3.5" />} />
         <StatCard label="Meilleure paire" value={fmtUsd(bestPair?.profit ?? 0)} sub={bestPair?.pair ?? "—"} tone="gain" icon={<TrendingUp className="h-3.5 w-3.5" />} />
       </div>
