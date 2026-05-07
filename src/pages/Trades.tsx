@@ -126,7 +126,7 @@ export default function Trades() {
                 const isShort = !!(t.is_short || t.trade_direction === "short");
                 const positive = pct > 0;
                 return (
-                  <tr key={`${t.trade_id}-${i}`} className="border-t border-border/50 hover:bg-secondary/40 transition-colors">
+                  <tr key={`${t.trade_id}-${i}`} onClick={() => setSelected(t)} className="border-t border-border/50 hover:bg-secondary/40 transition-colors cursor-pointer">
                     <td className="px-3 py-1.5 font-semibold">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
