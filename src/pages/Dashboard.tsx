@@ -83,8 +83,9 @@ export default function Dashboard() {
   const today = daily.data?.data?.[0]?.abs_profit ?? 0;
   const weekProfit = (daily.data?.data ?? []).slice(0, 7).reduce((s: number, d: any) => s + (d.abs_profit ?? 0), 0);
   const botRunning = !profit.offline && status.data && !status.data?.error;
-  const bankroll = settings?.bankroll ?? 0;
-  const roi = bankroll ? (totalProfitAll / bankroll) * 100 : 0;
+  const initialBankroll = settings?.bankroll ?? 0;
+  const bankroll = initialBankroll + totalProfitAll;
+  const roi = initialBankroll ? (totalProfitAll / initialBankroll) * 100 : 0;
   const openCount = Array.isArray(status.data) ? status.data.length : 0;
 
   const equityTone = totalProfitAll >= 0 ? "gain" : "loss";
@@ -116,7 +117,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-3 mb-3">
-        <StatCard label="Bankroll" value={fmtUsd(bankroll)} icon={<Wallet className="h-3.5 w-3.5" />} />
+        <StatCard label="Bankroll" value={fmtUsd(bankroll)} sub={`Initial ${fmtUsd(initialBankroll)}`} tone={tone(totalProfitAll)} icon={<Wallet className="h-3.5 w-3.5" />} />
         <StatCard label="ROI" value={fmtPct(roi)} tone={tone(roi)} icon={<Zap className="h-3.5 w-3.5" />} />
         <StatCard label="Meilleure paire" value={fmtUsd(bestPair?.profit ?? 0)} sub={bestPair?.pair ?? "—"} tone="gain" icon={<TrendingUp className="h-3.5 w-3.5" />} />
       </div>
