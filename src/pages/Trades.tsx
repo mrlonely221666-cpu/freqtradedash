@@ -219,6 +219,9 @@ export default function Trades() {
                     {isOpen && <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">Ouvert</span>}
                     {t.archived && <Archive className="h-3.5 w-3.5 text-muted-foreground" />}
                   </DialogTitle>
+                  <DialogDescription className="text-[10px] text-muted-foreground">
+                    Trade {(selectedIdx ?? 0) + 1} / {filtered.length} · ← → pour naviguer · Échap pour fermer
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-2 text-xs tabular mt-2">
                   <Detail label="ID Trade" value={`#${t.trade_id}`} />
