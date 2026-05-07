@@ -48,6 +48,15 @@ export default function Dashboard() {
     date: d.date, profit: Number((d.abs_profit ?? 0).toFixed(2)),
   })), [daily.data]);
 
+  // Best pair calculé depuis l'historique
+  const bestPair = useMemo(() => {
+    const map = new Map<string, number>();
+    closed.forEach((t: any) => map.set(t.pair, (map.get(t.pair) ?? 0) + Number(t.profit_abs ?? 0)));
+    let best: { pair: string; profit: number } | null = null;
+    map.forEach((profit, pair) => { if (!best || profit > best.profit) best = { pair, profit }; });
+    return best;
+  }, [closed]);
+
   if (!settings?.api_url) {
     return (
       <AppLayout>
@@ -79,15 +88,6 @@ export default function Dashboard() {
   const openCount = Array.isArray(status.data) ? status.data.length : 0;
 
   const equityTone = totalProfitAll >= 0 ? "gain" : "loss";
-
-  // Best pair calculé depuis l'historique
-  const bestPair = useMemo(() => {
-    const map = new Map<string, number>();
-    closed.forEach((t: any) => map.set(t.pair, (map.get(t.pair) ?? 0) + Number(t.profit_abs ?? 0)));
-    let best: { pair: string; profit: number } | null = null;
-    map.forEach((profit, pair) => { if (!best || profit > best.profit) best = { pair, profit }; });
-    return best;
-  }, [closed]);
 
   return (
     <AppLayout>
