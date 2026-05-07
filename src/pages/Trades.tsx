@@ -1,12 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useTradeHistory } from "@/hooks/useTradeHistory";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { fmtNum, fmtPct, fmtUsd, fmtDuration, fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowDownRight, ArrowUpRight, TrendingDown, TrendingUp, Archive } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive } from "lucide-react";
 
 export default function Trades() {
   const { trades, archivedCount } = useTradeHistory();
@@ -14,7 +15,8 @@ export default function Trades() {
   const [filter, setFilter] = useState<"all" | "win" | "loss">("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const lastFocused = useRef<HTMLElement | null>(null);
 
   const filtered = useMemo(() => {
     return trades.filter((t: any) => {
@@ -28,6 +30,40 @@ export default function Trades() {
       return true;
     });
   }, [trades, pair, filter, from, to]);
+
+  const selected = selectedIdx != null ? filtered[selectedIdx] ?? null : null;
+
+  const openTrade = (i: number, e?: React.MouseEvent | React.KeyboardEvent) => {
+    lastFocused.current = (e?.currentTarget as HTMLElement) ?? (document.activeElement as HTMLElement);
+    setSelectedIdx(i);
+  };
+
+  const closeDialog = () => {
+    setSelectedIdx(null);
+    // restore focus to the trigger after Radix unmount
+    requestAnimationFrame(() => lastFocused.current?.focus?.());
+  };
+
+  // Keep index valid when filters change
+  useEffect(() => {
+    if (selectedIdx != null && selectedIdx >= filtered.length) setSelectedIdx(null);
+  }, [filtered.length, selectedIdx]);
+
+  // Arrow-key navigation between trades while dialog is open
+  useEffect(() => {
+    if (selectedIdx == null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" && selectedIdx < filtered.length - 1) {
+        e.preventDefault();
+        setSelectedIdx(selectedIdx + 1);
+      } else if (e.key === "ArrowLeft" && selectedIdx > 0) {
+        e.preventDefault();
+        setSelectedIdx(selectedIdx - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedIdx, filtered.length]);
 
   const wins = filtered.filter((t: any) => Number(t.profit_ratio ?? 0) > 0).length;
   const losses = filtered.length - wins;
@@ -79,7 +115,7 @@ export default function Trades() {
           const isShort = !!(t.is_short || t.trade_direction === "short");
           const positive = pct > 0;
           return (
-            <button type="button" onClick={() => setSelected(t)} key={`${t.trade_id}-${i}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 transition-colors">
+            <button type="button" onClick={(e) => openTrade(i, e)} key={`${t.trade_id}-${i}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 focus:ring-1 focus:ring-ring transition-colors">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
@@ -126,7 +162,7 @@ export default function Trades() {
                 const isShort = !!(t.is_short || t.trade_direction === "short");
                 const positive = pct > 0;
                 return (
-                  <tr key={`${t.trade_id}-${i}`} onClick={() => setSelected(t)} className="border-t border-border/50 hover:bg-secondary/40 transition-colors cursor-pointer">
+                  <tr key={`${t.trade_id}-${i}`} tabIndex={0} role="button" onClick={(e) => openTrade(i, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(i, e as any); } }} className="border-t border-border/50 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 transition-colors cursor-pointer">
                     <td className="px-3 py-1.5 font-semibold">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
@@ -158,8 +194,11 @@ export default function Trades() {
         </div>
       </div>
 
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-lg bg-card border-border">
+      <Dialog open={!!selected} onOpenChange={(o) => { if (!o) closeDialog(); }}>
+        <DialogContent
+          className="max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           {selected && (() => {
             const t = selected;
             const pct = Number(t.profit_ratio ?? 0) * 100;
@@ -180,6 +219,9 @@ export default function Trades() {
                     {isOpen && <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">Ouvert</span>}
                     {t.archived && <Archive className="h-3.5 w-3.5 text-muted-foreground" />}
                   </DialogTitle>
+                  <DialogDescription className="text-[10px] text-muted-foreground">
+                    Trade {(selectedIdx ?? 0) + 1} / {filtered.length} · ← → pour naviguer · Échap pour fermer
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-2 text-xs tabular mt-2">
                   <Detail label="ID Trade" value={`#${t.trade_id}`} />
@@ -204,6 +246,26 @@ export default function Trades() {
                     <span>{fmtUsd(profit)}</span>
                     <span className="text-xs opacity-80">({fmtPct(pct)})</span>
                   </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled={selectedIdx == null || selectedIdx <= 0}
+                    onClick={() => selectedIdx != null && setSelectedIdx(selectedIdx - 1)}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Précédent
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled={selectedIdx == null || selectedIdx >= filtered.length - 1}
+                    onClick={() => selectedIdx != null && setSelectedIdx(selectedIdx + 1)}
+                  >
+                    Suivant <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
                 </div>
               </>
             );
