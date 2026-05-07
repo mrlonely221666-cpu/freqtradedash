@@ -83,8 +83,9 @@ export default function Dashboard() {
   const today = daily.data?.data?.[0]?.abs_profit ?? 0;
   const weekProfit = (daily.data?.data ?? []).slice(0, 7).reduce((s: number, d: any) => s + (d.abs_profit ?? 0), 0);
   const botRunning = !profit.offline && status.data && !status.data?.error;
-  const bankroll = settings?.bankroll ?? 0;
-  const roi = bankroll ? (totalProfitAll / bankroll) * 100 : 0;
+  const initialBankroll = settings?.bankroll ?? 0;
+  const bankroll = initialBankroll + totalProfitAll;
+  const roi = initialBankroll ? (totalProfitAll / initialBankroll) * 100 : 0;
   const openCount = Array.isArray(status.data) ? status.data.length : 0;
 
   const equityTone = totalProfitAll >= 0 ? "gain" : "loss";
