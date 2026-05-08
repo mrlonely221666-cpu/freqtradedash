@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const endpoint = url.searchParams.get("endpoint") || "status";
-    const allowed = ["status", "profit", "trades", "balance", "show_config", "performance", "daily"];
+    const allowed = ["status", "profit", "trades", "balance", "show_config", "performance", "daily", "logs"];
     if (!allowed.includes(endpoint)) return json({ error: "Invalid endpoint" }, 400);
 
     const cacheKey = `${user.id}:${endpoint}`;
