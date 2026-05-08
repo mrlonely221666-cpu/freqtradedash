@@ -235,6 +235,23 @@ export default function Trades() {
         </div>
       </div>
 
+      {filtered.length > PAGE_SIZE && (
+        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+          <span className="text-muted-foreground tabular">
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} sur {filtered.length}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="outline" className="h-8" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+              <ChevronLeft className="h-3 w-3" />
+            </Button>
+            <span className="tabular text-muted-foreground px-2">{page + 1} / {pageCount}</span>
+            <Button size="sm" variant="outline" className="h-8" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)}>
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) closeDialog(); }}>
         <DialogContent
           className="max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto"
