@@ -7,17 +7,19 @@ import { fmtPct, fmtUsd, tone } from "@/lib/format";
 import { Card } from "@/components/ui/card";
 import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { Activity, TrendingUp, Wallet, Target, AlertCircle, ArrowDownRight, ArrowUpRight, Zap } from "lucide-react";
+import { Activity, TrendingUp, Wallet, Target, AlertCircle, ArrowDownRight, ArrowUpRight, Zap, Clock, Award, AlertTriangle, Scale, Layers, TrendingDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { avgDurationMin, dailyAgg, equityCurve, fmtMinutes, maxDrawdown, profitFactor, sharpeRatio } from "@/lib/metrics";
 
 export default function Dashboard() {
   const { settings } = useSettings();
   const profit = useFreqtrade<any>("profit");
   const status = useFreqtrade<any>("status");
   const daily = useFreqtrade<any>("daily");
+  const balance = useFreqtrade<any>("balance");
   const history = useTradeHistory();
 
   const lastTradeCount = useRef<number | null>(null);
@@ -34,21 +36,22 @@ export default function Dashboard() {
     else if (!profit.offline && !wasOnline.current) { toast.success("Bot de retour en ligne"); wasOnline.current = true; }
   }, [profit.offline]);
 
-  const closed = useMemo(
-    () => history.trades.filter((t: any) => t.close_date),
-    [history.trades]
-  );
-  const equity = useMemo(() => {
-    let cum = 0;
-    return [...closed]
-      .sort((a, b) => new Date(a.close_date).getTime() - new Date(b.close_date).getTime())
-      .map((t: any) => { cum += Number(t.profit_abs ?? 0); return { t: new Date(t.close_date).getTime(), equity: Number(cum.toFixed(2)) }; });
-  }, [closed]);
+  const closed = useMemo(() => history.trades.filter((t: any) => t.close_date), [history.trades]);
+
+  const equity = useMemo(() => equityCurve(closed), [closed]);
+  const dd = useMemo(() => maxDrawdown(equity), [equity]);
   const dailyData = useMemo(() => [...(daily.data?.data ?? [])].reverse().map((d: any) => ({
     date: d.date, profit: Number((d.abs_profit ?? 0).toFixed(2)),
   })), [daily.data]);
+  const dailyFromHistory = useMemo(() => dailyAgg(closed), [closed]);
+  const sharpe = useMemo(() => sharpeRatio(dailyFromHistory.map((d) => d.profit)), [dailyFromHistory]);
+  const pf = useMemo(() => profitFactor(closed), [closed]);
+  const avgDur = useMemo(() => avgDurationMin(closed), [closed]);
 
-  // Best pair calculé depuis l'historique
+  const best = closed.reduce((b: any, t: any) => (Number(t.profit_abs) > (b ? Number(b.profit_abs) : -Infinity) ? t : b), null as any);
+  const worst = closed.reduce((b: any, t: any) => (Number(t.profit_abs) < (b ? Number(b.profit_abs) : Infinity) ? t : b), null as any);
+
+  // Best pair
   const bestPair = useMemo(() => {
     const map = new Map<string, number>();
     closed.forEach((t: any) => map.set(t.pair, (map.get(t.pair) ?? 0) + Number(t.profit_abs ?? 0)));
@@ -70,7 +73,6 @@ export default function Dashboard() {
     );
   }
 
-  // Stats issues de l'historique persistant fusionné
   const closedCount = closed.length;
   const totalProfitAll = closed.reduce((s: number, t: any) => s + Number(t.profit_abs ?? 0), 0);
   const winsAll = closed.filter((t: any) => Number(t.profit_ratio ?? 0) > 0).length;
@@ -82,11 +84,15 @@ export default function Dashboard() {
 
   const today = daily.data?.data?.[0]?.abs_profit ?? 0;
   const weekProfit = (daily.data?.data ?? []).slice(0, 7).reduce((s: number, d: any) => s + (d.abs_profit ?? 0), 0);
+  const monthProfit = (daily.data?.data ?? []).slice(0, 30).reduce((s: number, d: any) => s + (d.abs_profit ?? 0), 0);
   const botRunning = !profit.offline && status.data && !status.data?.error;
   const initialBankroll = settings?.bankroll ?? 0;
   const bankroll = initialBankroll + totalProfitAll;
   const roi = initialBankroll ? (totalProfitAll / initialBankroll) * 100 : 0;
   const openCount = Array.isArray(status.data) ? status.data.length : 0;
+
+  // Total balance from API or fallback
+  const totalBalance = balance.data?.total ?? balance.data?.value ?? bankroll;
 
   const equityTone = totalProfitAll >= 0 ? "gain" : "loss";
 
@@ -110,16 +116,31 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-4 mb-2">
+        <StatCard label="Solde total" value={fmtUsd(Number(totalBalance))} sub={`Initial ${fmtUsd(initialBankroll)}`} tone={tone(totalProfitAll)} icon={<Wallet className="h-3.5 w-3.5" />} />
         <StatCard label="P&L Total" value={fmtUsd(totalProfitAll)} sub={fmtPct(avgPct)} tone={tone(totalProfitAll)} icon={totalProfitAll >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />} />
-        <StatCard label="Aujourd'hui" value={fmtUsd(today)} tone={tone(today)} icon={<Activity className="h-3.5 w-3.5" />} />
-        <StatCard label="7 jours" value={fmtUsd(weekProfit)} tone={tone(weekProfit)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <StatCard label="Trades" value={closedCount} sub={`${winRate.toFixed(1).replace(".", ",")}% réussite`} icon={<Target className="h-3.5 w-3.5" />} />
+        <StatCard label="ROI" value={fmtPct(roi)} tone={tone(roi)} icon={<Zap className="h-3.5 w-3.5" />} />
+        <StatCard label="Winrate" value={`${winRate.toFixed(1).replace(".", ",")}%`} sub={`${winsAll}/${closedCount}`} tone={winRate >= 50 ? "gain" : "loss"} icon={<Target className="h-3.5 w-3.5" />} />
       </div>
 
-      <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-3 mb-3">
-        <StatCard label="Bankroll" value={fmtUsd(bankroll)} sub={`Initial ${fmtUsd(initialBankroll)}`} tone={tone(totalProfitAll)} icon={<Wallet className="h-3.5 w-3.5" />} />
-        <StatCard label="ROI" value={fmtPct(roi)} tone={tone(roi)} icon={<Zap className="h-3.5 w-3.5" />} />
-        <StatCard label="Meilleure paire" value={fmtUsd(bestPair?.profit ?? 0)} sub={bestPair?.pair ?? "—"} tone="gain" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+      <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-4 mb-2">
+        <StatCard label="Aujourd'hui" value={fmtUsd(today)} tone={tone(today)} icon={<Activity className="h-3.5 w-3.5" />} />
+        <StatCard label="7 jours" value={fmtUsd(weekProfit)} tone={tone(weekProfit)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard label="30 jours" value={fmtUsd(monthProfit)} tone={tone(monthProfit)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard label="Ouverts / Fermés" value={`${openCount} / ${closedCount}`} icon={<Layers className="h-3.5 w-3.5" />} />
+      </div>
+
+      <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-4 mb-2">
+        <StatCard label="Profit Factor" value={isFinite(pf) ? pf.toFixed(2).replace(".", ",") : "∞"} tone={pf >= 1 ? "gain" : "loss"} icon={<Scale className="h-3.5 w-3.5" />} />
+        <StatCard label="Sharpe" value={sharpe.toFixed(2).replace(".", ",")} tone={sharpe >= 1 ? "gain" : sharpe < 0 ? "loss" : "default"} icon={<Award className="h-3.5 w-3.5" />} />
+        <StatCard label="Drawdown max" value={fmtUsd(-dd.abs)} sub={fmtPct(-dd.pct)} tone="loss" icon={<AlertTriangle className="h-3.5 w-3.5" />} />
+        <StatCard label="Durée moy." value={fmtMinutes(avgDur)} icon={<Clock className="h-3.5 w-3.5" />} />
+      </div>
+
+      <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-4 mb-3">
+        <StatCard label="Total gains" value={winsAll} tone="gain" icon={<ArrowUpRight className="h-3.5 w-3.5" />} />
+        <StatCard label="Total pertes" value={lossesAll} tone="loss" icon={<ArrowDownRight className="h-3.5 w-3.5" />} />
+        <StatCard label="Meilleur trade" value={fmtUsd(best?.profit_abs ?? 0)} sub={best?.pair ?? "—"} tone="gain" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard label="Pire trade" value={fmtUsd(worst?.profit_abs ?? 0)} sub={worst?.pair ?? "—"} tone="loss" icon={<TrendingDown className="h-3.5 w-3.5" />} />
       </div>
 
       <Card className="bg-card border-border rounded-md overflow-hidden mb-2">
@@ -163,7 +184,7 @@ export default function Dashboard() {
         </div>
       </Card>
 
-      <Card className="bg-card border-border rounded-md overflow-hidden">
+      <Card className="bg-card border-border rounded-md overflow-hidden mb-2">
         <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/40">
           <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">P&L journalier</span>
           <span className="text-[10px] tabular text-muted-foreground">{dailyData.length} jours</span>
@@ -188,6 +209,14 @@ export default function Dashboard() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </Card>
+
+      <Card className="p-3 bg-card border-border rounded-md flex items-center justify-between gap-2">
+        <div className="text-xs text-muted-foreground">
+          Meilleure paire : <span className="text-foreground font-semibold">{bestPair?.pair ?? "—"}</span>
+          <span className="ml-2 text-gain font-semibold">{fmtUsd(bestPair?.profit ?? 0)}</span>
+        </div>
+        <Button asChild size="sm" variant="outline"><Link to="/analytics">Voir l'analytique</Link></Button>
       </Card>
     </AppLayout>
   );
