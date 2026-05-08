@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { fmtNum, fmtPct, fmtUsd, fmtDuration, fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive, Download } from "lucide-react";
 
 export default function Trades() {
   const { trades, archivedCount } = useTradeHistory();
@@ -16,7 +16,36 @@ export default function Trades() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
   const lastFocused = useRef<HTMLElement | null>(null);
+
+  const exportCsv = () => {
+    const rows = [
+      ["date_ouverture", "date_fermeture", "paire", "sens", "entree", "sortie", "profit_pct", "profit_usd", "mise", "duree", "raison_sortie"],
+      ...filtered.map((t: any) => [
+        t.open_date ?? "",
+        t.close_date ?? "",
+        t.pair ?? "",
+        t.is_short || t.trade_direction === "short" ? "SHORT" : "LONG",
+        t.open_rate ?? "",
+        t.close_rate ?? "",
+        ((Number(t.profit_ratio ?? 0)) * 100).toFixed(4),
+        Number(t.profit_abs ?? 0).toFixed(4),
+        Number(t.stake_amount ?? 0).toFixed(4),
+        fmtDuration(t.open_date, t.close_date),
+        (t.exit_reason ?? "").replace(/[\n,;]/g, " "),
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `trades-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filtered = useMemo(() => {
     return trades.filter((t: any) => {
