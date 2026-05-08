@@ -149,12 +149,13 @@ export default function Trades() {
         {filtered.length === 0 && (
           <div className="py-10 text-center text-muted-foreground text-xs">Aucun trade</div>
         )}
-        {filtered.map((t: any, i: number) => {
+        {paged.map((t: any, i: number) => {
+          const absIdx = page * PAGE_SIZE + i;
           const pct = Number(t.profit_ratio ?? 0) * 100;
           const isShort = !!(t.is_short || t.trade_direction === "short");
           const positive = pct > 0;
           return (
-            <button type="button" onClick={(e) => openTrade(i, e)} key={`${t.trade_id}-${i}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 focus:ring-1 focus:ring-ring transition-colors">
+            <button type="button" onClick={(e) => openTrade(absIdx, e)} key={`${t.trade_id}-${absIdx}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 focus:ring-1 focus:ring-ring transition-colors">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
@@ -196,12 +197,13 @@ export default function Trades() {
               {filtered.length === 0 && (
                 <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">Aucun trade</td></tr>
               )}
-              {filtered.map((t: any, i: number) => {
+              {paged.map((t: any, i: number) => {
+                const absIdx = page * PAGE_SIZE + i;
                 const pct = Number(t.profit_ratio ?? 0) * 100;
                 const isShort = !!(t.is_short || t.trade_direction === "short");
                 const positive = pct > 0;
                 return (
-                  <tr key={`${t.trade_id}-${i}`} tabIndex={0} role="button" onClick={(e) => openTrade(i, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(i, e as any); } }} className="border-t border-border/50 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 transition-colors cursor-pointer">
+                  <tr key={`${t.trade_id}-${absIdx}`} tabIndex={0} role="button" onClick={(e) => openTrade(absIdx, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(absIdx, e as any); } }} className="border-t border-border/50 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 transition-colors cursor-pointer">
                     <td className="px-3 py-1.5 font-semibold">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
