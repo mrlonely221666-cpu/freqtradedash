@@ -96,6 +96,10 @@ export default function Trades() {
 
   const wins = filtered.filter((t: any) => Number(t.profit_ratio ?? 0) > 0).length;
   const losses = filtered.length - wins;
+  const totalProfit = filtered.reduce((s: number, t: any) => s + Number(t.profit_abs ?? 0), 0);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => { if (page >= pageCount) setPage(0); }, [pageCount, page]);
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <AppLayout>
@@ -112,6 +116,12 @@ export default function Trades() {
               </span>
             )}
           </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className={cn("text-xs tabular px-2 py-1 rounded font-bold", totalProfit >= 0 ? "bg-gain/10 text-gain" : "bg-loss/10 text-loss")}>{fmtUsd(totalProfit)}</span>
+          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={exportCsv} disabled={!filtered.length}>
+            <Download className="h-3 w-3 mr-1" /> CSV
+          </Button>
         </div>
       </div>
 
