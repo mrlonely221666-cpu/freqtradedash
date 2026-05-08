@@ -1,12 +1,15 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, ListOrdered, LineChart, Settings as SettingsIcon, LogOut, Activity } from "lucide-react";
+import { LayoutDashboard, ListOrdered, LineChart, Settings as SettingsIcon, LogOut, Activity, Radio, ShieldAlert, ScrollText } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
   { title: "Tableau de bord", url: "/", icon: LayoutDashboard },
-  { title: "Trades", url: "/trades", icon: ListOrdered },
+  { title: "Trades ouverts", url: "/open", icon: Radio },
+  { title: "Historique", url: "/trades", icon: ListOrdered },
   { title: "Analytique", url: "/analytics", icon: LineChart },
+  { title: "Risque", url: "/risk", icon: ShieldAlert },
+  { title: "Logs", url: "/logs", icon: ScrollText },
   { title: "Paramètres", url: "/settings", icon: SettingsIcon },
 ];
 

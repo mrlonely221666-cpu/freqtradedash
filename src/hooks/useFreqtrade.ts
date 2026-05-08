@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-type Endpoint = "status" | "profit" | "trades" | "balance" | "daily" | "performance";
+type Endpoint = "status" | "profit" | "trades" | "balance" | "daily" | "performance" | "logs";
 
 export function useFreqtrade<T = any>(endpoint: Endpoint, intervalMs = 5000) {
   const { session } = useAuth();

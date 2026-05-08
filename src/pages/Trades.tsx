@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { fmtNum, fmtPct, fmtUsd, fmtDuration, fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive, Download } from "lucide-react";
 
 export default function Trades() {
   const { trades, archivedCount } = useTradeHistory();
@@ -16,7 +16,36 @@ export default function Trades() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
   const lastFocused = useRef<HTMLElement | null>(null);
+
+  const exportCsv = () => {
+    const rows = [
+      ["date_ouverture", "date_fermeture", "paire", "sens", "entree", "sortie", "profit_pct", "profit_usd", "mise", "duree", "raison_sortie"],
+      ...filtered.map((t: any) => [
+        t.open_date ?? "",
+        t.close_date ?? "",
+        t.pair ?? "",
+        t.is_short || t.trade_direction === "short" ? "SHORT" : "LONG",
+        t.open_rate ?? "",
+        t.close_rate ?? "",
+        ((Number(t.profit_ratio ?? 0)) * 100).toFixed(4),
+        Number(t.profit_abs ?? 0).toFixed(4),
+        Number(t.stake_amount ?? 0).toFixed(4),
+        fmtDuration(t.open_date, t.close_date),
+        (t.exit_reason ?? "").replace(/[\n,;]/g, " "),
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `trades-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filtered = useMemo(() => {
     return trades.filter((t: any) => {
@@ -67,6 +96,10 @@ export default function Trades() {
 
   const wins = filtered.filter((t: any) => Number(t.profit_ratio ?? 0) > 0).length;
   const losses = filtered.length - wins;
+  const totalProfit = filtered.reduce((s: number, t: any) => s + Number(t.profit_abs ?? 0), 0);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => { if (page >= pageCount) setPage(0); }, [pageCount, page]);
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <AppLayout>
@@ -83,6 +116,12 @@ export default function Trades() {
               </span>
             )}
           </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className={cn("text-xs tabular px-2 py-1 rounded font-bold", totalProfit >= 0 ? "bg-gain/10 text-gain" : "bg-loss/10 text-loss")}>{fmtUsd(totalProfit)}</span>
+          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={exportCsv} disabled={!filtered.length}>
+            <Download className="h-3 w-3 mr-1" /> CSV
+          </Button>
         </div>
       </div>
 
@@ -110,12 +149,13 @@ export default function Trades() {
         {filtered.length === 0 && (
           <div className="py-10 text-center text-muted-foreground text-xs">Aucun trade</div>
         )}
-        {filtered.map((t: any, i: number) => {
+        {paged.map((t: any, i: number) => {
+          const absIdx = page * PAGE_SIZE + i;
           const pct = Number(t.profit_ratio ?? 0) * 100;
           const isShort = !!(t.is_short || t.trade_direction === "short");
           const positive = pct > 0;
           return (
-            <button type="button" onClick={(e) => openTrade(i, e)} key={`${t.trade_id}-${i}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 focus:ring-1 focus:ring-ring transition-colors">
+            <button type="button" onClick={(e) => openTrade(absIdx, e)} key={`${t.trade_id}-${absIdx}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 focus:ring-1 focus:ring-ring transition-colors">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
@@ -157,12 +197,13 @@ export default function Trades() {
               {filtered.length === 0 && (
                 <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">Aucun trade</td></tr>
               )}
-              {filtered.map((t: any, i: number) => {
+              {paged.map((t: any, i: number) => {
+                const absIdx = page * PAGE_SIZE + i;
                 const pct = Number(t.profit_ratio ?? 0) * 100;
                 const isShort = !!(t.is_short || t.trade_direction === "short");
                 const positive = pct > 0;
                 return (
-                  <tr key={`${t.trade_id}-${i}`} tabIndex={0} role="button" onClick={(e) => openTrade(i, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(i, e as any); } }} className="border-t border-border/50 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 transition-colors cursor-pointer">
+                  <tr key={`${t.trade_id}-${absIdx}`} tabIndex={0} role="button" onClick={(e) => openTrade(absIdx, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(absIdx, e as any); } }} className="border-t border-border/50 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 transition-colors cursor-pointer">
                     <td className="px-3 py-1.5 font-semibold">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
@@ -193,6 +234,23 @@ export default function Trades() {
           </table>
         </div>
       </div>
+
+      {filtered.length > PAGE_SIZE && (
+        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+          <span className="text-muted-foreground tabular">
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} sur {filtered.length}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="outline" className="h-8" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+              <ChevronLeft className="h-3 w-3" />
+            </Button>
+            <span className="tabular text-muted-foreground px-2">{page + 1} / {pageCount}</span>
+            <Button size="sm" variant="outline" className="h-8" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)}>
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) closeDialog(); }}>
         <DialogContent

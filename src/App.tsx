@@ -9,6 +9,9 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import OpenTrades from "./pages/OpenTrades";
+import Risk from "./pages/Risk";
+import Logs from "./pages/Logs";
 
 const queryClient = new QueryClient();
 
@@ -21,8 +24,11 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Index />} />
+          <Route path="/open" element={<OpenTrades />} />
           <Route path="/trades" element={<Trades />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/risk" element={<Risk />} />
+          <Route path="/logs" element={<Logs />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
