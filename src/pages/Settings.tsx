@@ -117,6 +117,35 @@ export default function Settings() {
           Tous vos trades fermés sont automatiquement archivés dans votre espace personnel. Si vous redémarrez ou reconnectez votre bot Freqtrade, l'historique reste disponible et sera fusionné avec les nouveaux trades.
         </p>
       </Card>
+
+      <Card className="p-6 max-w-2xl mt-6 border-destructive/40">
+        <h3 className="font-semibold mb-2 text-destructive">Zone dangereuse</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Efface définitivement tout l'historique archivé des trades ainsi que la configuration du bot (URL, identifiants, bankroll). Cette action est irréversible.
+        </p>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" disabled={wiping}>
+              {wiping ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Tout effacer
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Effacer toutes les données ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tous les trades archivés et la configuration du bot seront supprimés. Cette opération ne peut pas être annulée.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={wipeAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Confirmer la suppression
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </Card>
     </AppLayout>
   );
 }
