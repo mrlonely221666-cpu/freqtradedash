@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { useFreqtrade } from "./useFreqtrade";
 
 export interface ArchivedTrade {
+  id: string;
   trade_id: number;
   pair: string;
   is_short: boolean;
@@ -33,7 +34,7 @@ export function useTradeHistory() {
     if (!user) return;
     const { data } = await supabase
       .from("trade_history")
-      .select("trade_id,pair,is_short,open_rate,close_rate,stake_amount,amount,profit_abs,profit_ratio,open_date,close_date,exit_reason")
+      .select("id,trade_id,pair,is_short,open_rate,close_rate,stake_amount,amount,profit_abs,profit_ratio,open_date,close_date,exit_reason")
       .eq("user_id", user.id)
       .order("close_date", { ascending: false })
       .limit(1000);
@@ -92,10 +93,28 @@ export function useTradeHistory() {
     ...onlyArchived.map((a) => ({ ...a, archived: true })),
   ];
 
+  const deleteArchived = useCallback(async (ids: string[]) => {
+    if (!user || ids.length === 0) return { error: null as any };
+    const { error } = await supabase
+      .from("trade_history")
+      .delete()
+      .eq("user_id", user.id)
+      .in("id", ids);
+    if (!error) {
+      // purge synced cache for deleted entries so re-archival can happen if bot reports them again
+      const deleted = archived.filter((a) => ids.includes(a.id));
+      deleted.forEach((d) => syncedIds.current.delete(`${d.trade_id}|${d.open_date ?? ""}`));
+      await loadArchive();
+    }
+    return { error };
+  }, [user, archived, loadArchive]);
+
   return {
     trades: merged,
     archivedCount: archived.length,
     loading: loading || live.loading,
     offline: live.offline,
+    deleteArchived,
+    reload: loadArchive,
   };
 }
