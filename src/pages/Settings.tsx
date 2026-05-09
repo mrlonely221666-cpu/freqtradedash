@@ -7,13 +7,43 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Settings() {
   const { settings, save } = useSettings();
+  const { user } = useAuth();
   const [form, setForm] = useState({ api_url: "", username: "", password: "", bankroll: 1000 });
   const [tgChat, setTgChat] = useState("");
   const [busy, setBusy] = useState(false);
+  const [wiping, setWiping] = useState(false);
+
+  const wipeAll = async () => {
+    if (!user) return;
+    setWiping(true);
+    const [{ error: e1 }, { error: e2 }] = await Promise.all([
+      supabase.from("trade_history").delete().eq("user_id", user.id),
+      supabase.from("bot_settings").delete().eq("user_id", user.id),
+    ]);
+    setWiping(false);
+    if (e1 || e2) {
+      toast.error((e1 ?? e2)?.message ?? "Erreur lors de la suppression");
+      return;
+    }
+    toast.success("Toutes les données ont été effacées");
+    setTimeout(() => window.location.reload(), 800);
+  };
 
   useEffect(() => {
     if (settings) setForm(settings);
