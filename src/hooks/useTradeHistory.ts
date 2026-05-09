@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { useFreqtrade } from "./useFreqtrade";
 
 export interface ArchivedTrade {
+  id: string;
   trade_id: number;
   pair: string;
   is_short: boolean;
