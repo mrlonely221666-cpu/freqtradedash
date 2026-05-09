@@ -7,14 +7,20 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { fmtNum, fmtPct, fmtUsd, fmtDuration, fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive, Download } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Archive, Download, Trash2, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 
 export default function Trades() {
-  const { trades, archivedCount } = useTradeHistory();
+  const { trades, archivedCount, deleteArchived } = useTradeHistory();
   const [pair, setPair] = useState("");
   const [filter, setFilter] = useState<"all" | "win" | "loss">("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [archivedOnly, setArchivedOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
