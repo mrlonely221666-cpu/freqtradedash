@@ -152,14 +152,50 @@ export default function Trades() {
             <span className="px-1.5 py-0.5 rounded bg-gain/10 text-gain">▲ {wins}</span>
             <span className="px-1.5 py-0.5 rounded bg-loss/10 text-loss">▼ {losses}</span>
             {archivedCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setArchivedOnly((v) => !v)}
+                className={cn(
+                  "px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors",
+                  archivedOnly ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
+                )}
+                title={archivedOnly ? "Afficher tous les trades" : "Afficher uniquement les archives"}
+              >
                 <Archive className="h-3 w-3" /> {archivedCount} archivés
-              </span>
+              </button>
             )}
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <span className={cn("text-xs tabular px-2 py-1 rounded font-bold", totalProfit >= 0 ? "bg-gain/10 text-gain" : "bg-loss/10 text-loss")}>{fmtUsd(totalProfit)}</span>
+          {selectedIds.size > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="destructive" className="h-8 text-xs" disabled={deleting}>
+                  {deleting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                  Supprimer ({selectedIds.size})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer {selectedIds.size} archive(s) ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est définitive. Les trades sélectionnés seront supprimés de l'historique persistant.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(Array.from(selectedIds))}>Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {archivedOnly && archivedInFiltered.length > 0 && (
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={toggleAll}>
+              <Checkbox checked={allSelected} className="mr-1.5 pointer-events-none" />
+              {allSelected ? "Tout déselectionner" : "Tout sélectionner"}
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={exportCsv} disabled={!filtered.length}>
             <Download className="h-3 w-3 mr-1" /> CSV
           </Button>
