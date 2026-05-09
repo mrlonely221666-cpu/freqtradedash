@@ -240,25 +240,23 @@ export default function Trades() {
                   <Checkbox checked={selectedIds.has(t.id)} onCheckedChange={() => toggleOne(t.id)} aria-label="Sélectionner" />
                 ) : null}
               </div>
-              <button type="button" onClick={(e) => openTrade(absIdx, e)} className="text-left contents focus:outline-none">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
-                    <span className="font-semibold text-sm truncate">{t.pair}</span>
-                    {t.archived && <Archive className="h-2.5 w-2.5 text-muted-foreground" />}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground tabular mt-0.5">
-                    {isShort ? "VENTE" : "ACHAT"} · {fmtUsd(Number(t.stake_amount))} · {fmtDuration(t.open_date, t.close_date)}
-                  </div>
+              <div role="button" tabIndex={0} onClick={(e) => openTrade(absIdx, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(absIdx, e as any); } }} className="min-w-0 cursor-pointer focus:outline-none">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
+                  <span className="font-semibold text-sm truncate">{t.pair}</span>
+                  {t.archived && <Archive className="h-2.5 w-2.5 text-muted-foreground" />}
                 </div>
-                <div className="text-right tabular text-xs self-center">
-                  {t.close_rate ? fmtNum(Number(t.close_rate), 6) : fmtNum(Number(t.open_rate), 6)}
+                <div className="text-[10px] text-muted-foreground tabular mt-0.5">
+                  {isShort ? "VENTE" : "ACHAT"} · {fmtUsd(Number(t.stake_amount))} · {fmtDuration(t.open_date, t.close_date)}
                 </div>
-                <div className={cn("text-right tabular font-semibold text-sm self-center flex items-center gap-0.5 justify-end", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")}>
-                  {positive ? <ArrowUpRight className="h-3 w-3" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
-                  {fmtPct(pct)}
-                </div>
-              </button>
+              </div>
+              <div className="text-right tabular text-xs self-center cursor-pointer" onClick={(e) => openTrade(absIdx, e as any)}>
+                {t.close_rate ? fmtNum(Number(t.close_rate), 6) : fmtNum(Number(t.open_rate), 6)}
+              </div>
+              <div onClick={(e) => openTrade(absIdx, e as any)} className={cn("text-right tabular font-semibold text-sm self-center flex items-center gap-0.5 justify-end cursor-pointer", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")}>
+                {positive ? <ArrowUpRight className="h-3 w-3" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
+                {fmtPct(pct)}
+              </div>
             </div>
           );
         })}
