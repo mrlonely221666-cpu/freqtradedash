@@ -446,6 +446,26 @@ export default function Trades() {
                     Suivant <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
+                {t.archived && t.id && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="mt-2 w-full" disabled={deleting}>
+                        {deleting ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                        Supprimer cet archive
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer cet archive ?</AlertDialogTitle>
+                        <AlertDialogDescription>Action définitive — le trade sera retiré de l'historique.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={async () => { await handleDelete([t.id]); closeDialog(); }}>Supprimer</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </>
             );
           })()}
