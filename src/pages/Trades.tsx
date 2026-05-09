@@ -315,16 +315,39 @@ export default function Trades() {
                         {isShort ? "Vente" : "Achat"}
                       </span>
                     </td>
-                    <td className="px-3 py-1.5 text-right">{fmtNum(Number(t.open_rate), 6)}</td>
-                    <td className="px-3 py-1.5 text-right">{t.close_rate ? fmtNum(Number(t.close_rate), 6) : <span className="text-muted-foreground">—</span>}</td>
-                    <td className={cn("px-3 py-1.5 text-right font-semibold", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")}>
+                    <td className="px-3 py-1.5 text-right cursor-pointer" onClick={(e) => openTrade(absIdx, e as any)}>{fmtNum(Number(t.open_rate), 6)}</td>
+                    <td className="px-3 py-1.5 text-right cursor-pointer" onClick={(e) => openTrade(absIdx, e as any)}>{t.close_rate ? fmtNum(Number(t.close_rate), 6) : <span className="text-muted-foreground">—</span>}</td>
+                    <td className={cn("px-3 py-1.5 text-right font-semibold cursor-pointer", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")} onClick={(e) => openTrade(absIdx, e as any)}>
                       <span className="inline-flex items-center gap-0.5">
                         {positive ? <ArrowUpRight className="h-3 w-3" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
                         {fmtPct(pct)}
                       </span>
                     </td>
-                    <td className="px-3 py-1.5 text-right">{fmtUsd(Number(t.stake_amount))}</td>
-                    <td className="px-3 py-1.5 text-right text-muted-foreground">{fmtDuration(t.open_date, t.close_date)}</td>
+                    <td className="px-3 py-1.5 text-right cursor-pointer" onClick={(e) => openTrade(absIdx, e as any)}>{fmtUsd(Number(t.stake_amount))}</td>
+                    <td className="px-3 py-1.5 text-right text-muted-foreground cursor-pointer" onClick={(e) => openTrade(absIdx, e as any)}>{fmtDuration(t.open_date, t.close_date)}</td>
+                    <td className="px-2 py-1.5 text-right" onClick={(e) => e.stopPropagation()}>
+                      {canSelect && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" title="Supprimer cet archive">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer cet archive ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Le trade {t.pair} #{t.trade_id} sera supprimé définitivement de l'historique.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete([t.id])}>Supprimer</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
