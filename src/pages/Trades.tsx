@@ -55,6 +55,7 @@ export default function Trades() {
 
   const filtered = useMemo(() => {
     return trades.filter((t: any) => {
+      if (archivedOnly && !t.archived) return false;
       if (pair && !t.pair?.toLowerCase().includes(pair.toLowerCase())) return false;
       const p = Number(t.profit_ratio ?? 0);
       if (filter === "win" && p <= 0) return false;
@@ -64,7 +65,41 @@ export default function Trades() {
       if (to && dt > new Date(to).getTime() + 86400000) return false;
       return true;
     });
-  }, [trades, pair, filter, from, to]);
+  }, [trades, pair, filter, from, to, archivedOnly]);
+
+  const archivedInFiltered = useMemo(() => filtered.filter((t: any) => t.archived && t.id), [filtered]);
+  const allSelected = archivedInFiltered.length > 0 && archivedInFiltered.every((t: any) => selectedIds.has(t.id));
+  const toggleAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allSelected) archivedInFiltered.forEach((t: any) => next.delete(t.id));
+      else archivedInFiltered.forEach((t: any) => next.add(t.id));
+      return next;
+    });
+  };
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const handleDelete = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setDeleting(true);
+    const { error } = await deleteArchived(ids);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Archives supprimées", description: `${ids.length} trade(s) supprimé(s)` });
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    }
+  };
 
   const selected = selectedIdx != null ? filtered[selectedIdx] ?? null : null;
 
