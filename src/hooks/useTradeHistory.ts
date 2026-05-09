@@ -34,7 +34,7 @@ export function useTradeHistory() {
     if (!user) return;
     const { data } = await supabase
       .from("trade_history")
-      .select("trade_id,pair,is_short,open_rate,close_rate,stake_amount,amount,profit_abs,profit_ratio,open_date,close_date,exit_reason")
+      .select("id,trade_id,pair,is_short,open_rate,close_rate,stake_amount,amount,profit_abs,profit_ratio,open_date,close_date,exit_reason")
       .eq("user_id", user.id)
       .order("close_date", { ascending: false })
       .limit(1000);
