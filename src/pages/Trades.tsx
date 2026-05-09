@@ -218,7 +218,8 @@ export default function Trades() {
 
       {/* Mobile */}
       <div className="sm:hidden rounded-md border border-border bg-card overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-secondary/40">
+        <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-secondary/40">
+          <div className="w-4"></div>
           <div>Paire</div>
           <div className="text-right">Cours</div>
           <div className="text-right">P&L%</div>
@@ -231,26 +232,34 @@ export default function Trades() {
           const pct = Number(t.profit_ratio ?? 0) * 100;
           const isShort = !!(t.is_short || t.trade_direction === "short");
           const positive = pct > 0;
+          const canSelect = t.archived && t.id;
           return (
-            <button type="button" onClick={(e) => openTrade(absIdx, e)} key={`${t.trade_id}-${absIdx}`} className="w-full text-left group grid grid-cols-[1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 focus:ring-1 focus:ring-ring transition-colors">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
-                  <span className="font-semibold text-sm truncate">{t.pair}</span>
-                  {t.archived && <Archive className="h-2.5 w-2.5 text-muted-foreground" />}
+            <div key={`${t.trade_id}-${absIdx}`} className="grid grid-cols-[auto_1fr_auto_auto] gap-2 px-2.5 py-2 border-b border-border/50 last:border-b-0 hover:bg-secondary/40 transition-colors items-center">
+              <div className="flex items-center justify-center w-4" onClick={(e) => e.stopPropagation()}>
+                {canSelect ? (
+                  <Checkbox checked={selectedIds.has(t.id)} onCheckedChange={() => toggleOne(t.id)} aria-label="Sélectionner" />
+                ) : null}
+              </div>
+              <button type="button" onClick={(e) => openTrade(absIdx, e)} className="text-left contents focus:outline-none">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
+                    <span className="font-semibold text-sm truncate">{t.pair}</span>
+                    {t.archived && <Archive className="h-2.5 w-2.5 text-muted-foreground" />}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground tabular mt-0.5">
+                    {isShort ? "VENTE" : "ACHAT"} · {fmtUsd(Number(t.stake_amount))} · {fmtDuration(t.open_date, t.close_date)}
+                  </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground tabular mt-0.5">
-                  {isShort ? "VENTE" : "ACHAT"} · {fmtUsd(Number(t.stake_amount))} · {fmtDuration(t.open_date, t.close_date)}
+                <div className="text-right tabular text-xs self-center">
+                  {t.close_rate ? fmtNum(Number(t.close_rate), 6) : fmtNum(Number(t.open_rate), 6)}
                 </div>
-              </div>
-              <div className="text-right tabular text-xs self-center">
-                {t.close_rate ? fmtNum(Number(t.close_rate), 6) : fmtNum(Number(t.open_rate), 6)}
-              </div>
-              <div className={cn("text-right tabular font-semibold text-sm self-center flex items-center gap-0.5 justify-end", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")}>
-                {positive ? <ArrowUpRight className="h-3 w-3" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
-                {fmtPct(pct)}
-              </div>
-            </button>
+                <div className={cn("text-right tabular font-semibold text-sm self-center flex items-center gap-0.5 justify-end", positive ? "text-gain" : pct < 0 ? "text-loss" : "text-muted-foreground")}>
+                  {positive ? <ArrowUpRight className="h-3 w-3" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
+                  {fmtPct(pct)}
+                </div>
+              </button>
+            </div>
           );
         })}
       </div>
@@ -261,6 +270,11 @@ export default function Trades() {
           <table className="w-full text-xs tabular">
             <thead className="bg-secondary/40">
               <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                <th className="w-8 px-2 py-2">
+                  {archivedInFiltered.length > 0 && (
+                    <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Tout sélectionner" />
+                  )}
+                </th>
                 <th className="text-left font-medium px-3 py-2">Symbole</th>
                 <th className="text-left font-medium px-3 py-2">Sens</th>
                 <th className="text-right font-medium px-3 py-2">Entrée</th>
@@ -268,27 +282,34 @@ export default function Trades() {
                 <th className="text-right font-medium px-3 py-2">Var %</th>
                 <th className="text-right font-medium px-3 py-2">Mise</th>
                 <th className="text-right font-medium px-3 py-2">Durée</th>
+                <th className="w-8 px-2 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">Aucun trade</td></tr>
+                <tr><td colSpan={9} className="text-center py-12 text-muted-foreground">Aucun trade</td></tr>
               )}
               {paged.map((t: any, i: number) => {
                 const absIdx = page * PAGE_SIZE + i;
                 const pct = Number(t.profit_ratio ?? 0) * 100;
                 const isShort = !!(t.is_short || t.trade_direction === "short");
                 const positive = pct > 0;
+                const canSelect = t.archived && t.id;
                 return (
-                  <tr key={`${t.trade_id}-${absIdx}`} tabIndex={0} role="button" onClick={(e) => openTrade(absIdx, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(absIdx, e as any); } }} className="border-t border-border/50 hover:bg-secondary/40 focus:outline-none focus:bg-secondary/60 transition-colors cursor-pointer">
-                    <td className="px-3 py-1.5 font-semibold">
+                  <tr key={`${t.trade_id}-${absIdx}`} className={cn("border-t border-border/50 hover:bg-secondary/40 transition-colors", selectedIds.has(t.id) && "bg-primary/5")}>
+                    <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+                      {canSelect ? (
+                        <Checkbox checked={selectedIds.has(t.id)} onCheckedChange={() => toggleOne(t.id)} aria-label="Sélectionner" />
+                      ) : null}
+                    </td>
+                    <td tabIndex={0} role="button" onClick={(e) => openTrade(absIdx, e as any)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrade(absIdx, e as any); } }} className="px-3 py-1.5 font-semibold cursor-pointer focus:outline-none focus:bg-secondary/60">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", isShort ? "bg-loss" : "bg-gain")} />
                         {t.pair}
                         {t.archived && <Archive className="h-3 w-3 text-muted-foreground" />}
                       </span>
                     </td>
-                    <td className="px-3 py-1.5">
+                    <td className="px-3 py-1.5 cursor-pointer" onClick={(e) => openTrade(absIdx, e as any)}>
                       <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded", isShort ? "bg-loss/10 text-loss" : "bg-gain/10 text-gain")}>
                         {isShort ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
                         {isShort ? "Vente" : "Achat"}
